@@ -201,9 +201,9 @@ kbl(head(tidyCardioData, 4), booktabs = T, align='c',
 
 # Task 01
 
-Statistic Summary Table, Histogram and BoxPlot are used to detect and observed outliers in continuous variables.
+#### 1. Statistic Summary Table of continuous variables
 
-```{r summaryTable}
+```{r Task1_summaryTable}
 #| echo: false
 summaryTable = tidyCardioData |>
                select(age, height, weight, ap_hi, ap_lo) |>
@@ -225,11 +225,50 @@ knitr::kable(summaryTable,
              caption="Statistic summary of continuous variables")
 ```
 
-#### 1. Age :
+#### 2. Plausibility check
+
+##### Age :
 
 Boxplot display there is outliers at lower age. Outlier age is 30. All data is collected for adults. This reason will keep data with age 30.
 
-```{r Task1-Age}
+##### Height :
+
+There are subject with height under 100cm. And subject's age is above 30 in data. It is may be incorrect data. As plausibility check, subject below 100cm height are removed.
+
+##### Weight :
+
+There are subject with weight below 25kg. And subject's age is above 30 in data. It is may be incorrect data. As plausibility check, subject below 25kg weight are removed.
+
+##### Systolic blood pressure (SBP): ap_hi
+
+From Statistic summary of Systolic blood pressure, there are outliers in dataset. There are negative values and very high values. Range between 20 and 380 will be consider as acceptable value.
+
+Subject which has below 20 and above 380 SBP value are removed.
+
+##### Diastolic blood pressure (DBP): ap_lo
+
+From Statistic summary of Diastolic blood pressure, there are outliers in dataset. There are negative values and very high values. Range between 20 and 500 will be consider as acceptable value.
+
+Subject which has below 20 and above 500 DBP value are removed.
+
+```{r Task1_implausible_values}
+#| include: true
+
+# Filter implausible values from  height, weight, ap_hi and ap_lo.
+# Height implausible values : below 100cm
+# Weight implausible values : below 25kg
+# ap_hi implausible values : below 20 and above 380
+# ap_lo implausible values : below 20 and above 500
+ cardioDataTask1 = tidyCardioData |>
+              filter(height >= 100,
+                     weight >= 25,
+                     ap_hi > 20 & ap_hi <= 380,
+                     ap_lo > 20 & ap_lo <= 500)
+```
+
+#### 3. Histogram and BoxPlot before & after remove implausible values.
+
+```{r Task1-Age_plot}
 #| echo: false
 
 # Variable Age Box Plot
@@ -241,7 +280,7 @@ age_boxplot = ggplot(tidyCardioData) +
 age_hist = ggplot(tidyCardioData) +
   geom_histogram(aes(x=age), fill='skyblue', color="black",
                  binwidth = 4) +
-  xlim(25,70) +
+  #xlim(25,70) +
   labs(x="age(years)") +
   theme_classic()
 
@@ -249,18 +288,7 @@ age_hist = ggplot(tidyCardioData) +
  age_hist + age_boxplot
 ```
 
-#### 2. Height :
-
-There are subject with height under 100cm. And subject's age is above 30 in data. It is may be incorrect data. As plausibility check, subject below 100cm height are removed.
-
-```{r Height_Outlier}
-
-# Remove Height outlier : data below 100 cm
- cardioDataTask1 = tidyCardioData |>
-              filter(height >= 100)
-```
-
-```{r Height_plot}
+```{r Task1_Height_plot}
 #| echo: false
 
 # Variable Height Box Plot
@@ -273,6 +301,11 @@ height_hist_before = ggplot(tidyCardioData) +
   geom_histogram(aes(x=height), fill='skyblue', binwidth = 5) +
   labs(x="height(cm)", title = "Height Histogram Before")
 
+# Variable Height density 
+height_dens_before = ggplot(tidyCardioData) +
+  geom_density(aes(x=height), fill='skyblue') + 
+  labs(x="height(cm)", title = "Height Density Before")
+
  # Variable Height Box Plot after filter implausible values.
 height_boxplot_after = ggplot(cardioDataTask1) +
   geom_boxplot(aes(height))+
@@ -281,28 +314,18 @@ height_boxplot_after = ggplot(cardioDataTask1) +
 # Variable Height Histogram after filter implausible values.
 height_hist_after = ggplot(cardioDataTask1) +
   geom_histogram(aes(x=height), fill='skyblue', bins = 100) +
-  labs(x="height(cm)", title = "Height Histogram Before")
+  labs(x="height(cm)", title = "Height Histogram After")
 
-# Height BoxPlot and Histogram Before
-# height_hist_before + height_boxplot_before
-# Height BoxPlot and Histogram after filter implausible values.
-# height_hist_after + height_boxplot_after
- 
+# Variable Height density after filter implausible values.
+height_dens_after = ggplot(cardioDataTask1) +
+  geom_density(aes(x=height), fill='skyblue') + 
+  labs(x="height(cm)", title = "Height Density After")
+
 # Height histogram and BoxPlot before and after filter implausible values.
-(height_hist_before + height_boxplot_before) / (height_hist_after + height_boxplot_after)
+(height_boxplot_before + height_hist_before + height_dens_before) / (height_boxplot_after + height_hist_after  + height_dens_after )
 ```
 
-#### 3. Weight :
-
-There are subject with weight under 25kg. And subject's age is above 30 in data. It is may be incorrect data. As plausibility check, subject under 25kg weight are removed
-
-```{r weight_Outlier}
-# Remove Weight outlier : data below 25kg
- cardioDataTask1 = cardioDataTask1 |>
-              filter(weight >= 25) |> arrange(weight)
-```
-
-```{r weight_plot}
+```{r Task1_weight_plot}
 #| echo: false
 
 # Variable Weight Box-Plot 
@@ -314,6 +337,11 @@ weight_boxplot_before = ggplot(tidyCardioData) +
 weight_hist_before = ggplot(tidyCardioData) +
   geom_histogram(aes(x=weight), fill='skyblue', binwidth = 10) +
   labs(x="weight(kg)", title = "Weight Histogram Before")
+
+# Variable Weight Density
+weight_dens_before = ggplot(tidyCardioData) +
+  geom_density(aes(x=weight), fill='skyblue') + 
+  labs(x="weight(kg)", title = "Weight Density Before")
  
  # Variable Weight Box-Plot after filter implausible values.
 weight_boxplot_after = ggplot(cardioDataTask1) +
@@ -325,31 +353,16 @@ weight_hist_after = ggplot(cardioDataTask1) +
   geom_histogram(aes(x=weight), fill='skyblue', binwidth = 10) +
   labs(x="weight(kg)", title = "Weight Histogram After")
 
-# Weight Boxplot and Histogram
-# weight_hist_before + weight_boxplot_before
+# Variable Weight density after filter implausible values.
+weight_dens_after = ggplot(cardioDataTask1) +
+  geom_density(aes(x=weight), fill='skyblue') + 
+  labs(x="weight(kg)", title = "Weight Density After")
 
-# Weight Boxplot and Histogram after filter implausible values.
-# weight_hist_after + weight_boxplot_after
- 
 # Weight histogram and BoxPlot before and after filter implausible values.
-(weight_hist_before + weight_boxplot_before) / (weight_hist_after + weight_boxplot_after)
+(weight_boxplot_before + weight_hist_before + weight_dens_before) / (weight_boxplot_after + weight_hist_after  + weight_dens_after )
 ```
 
-#### 4. Systolic blood pressure (SBP): ap_hi
-
-From Statistic summary of Systolic blood pressure, there are outliers in dataset. There are negative values and very high values.
-
-subject which has below 20 SBP value are removed as lower outliers.
-
-subject which has above 380 SBP value are removed as higher outliers.
-
-```{r ap_hi_Outlier}
-# Remove ap_hi outlier : below 20 and above 380
- cardioDataTask1 = cardioDataTask1 |>
-              filter(ap_hi > 20 & ap_hi <= 380)
-```
-
-```{r ap_hi_plot}
+```{r Task1_ap_hi_plot}
 #| echo: false
 
 # Variable SBP Box-Plot
@@ -362,6 +375,11 @@ sbp_hist_before = ggplot(tidyCardioData) +
   geom_histogram(aes(x=ap_hi), fill='skyblue', binwidth = 5) +
   labs(x="Systolic BP", title = "SBP Histogram Before")
 
+# Variable SBP Density
+sbp_dens_before = ggplot(tidyCardioData) +
+  geom_density(aes(x=ap_hi), fill='skyblue') + 
+  labs(x="Systolic BP", title = "SBP Density Before")
+
 # Variable SBP Box-Plot after filter implausible values.
 sbp_boxplot_after = ggplot(cardioDataTask1) +
   geom_boxplot(aes(ap_hi))+
@@ -372,31 +390,18 @@ sbp_hist_after = ggplot(cardioDataTask1) +
   geom_histogram(aes(x=ap_hi), fill='skyblue', binwidth = 5) +
   labs(x="Systolic BP", title = "SBP Histogram After")
 
-# SBP Box-Plot and Histogram
-#sbp_hist_before + sbp_boxplot_before
-
-# SBP Box-Plot and Histogram after filter implausible values.
-#sbp_hist_after + sbp_boxplot_after
+# Variable SBP Density after filter implausible values.
+sbp_dens_after = ggplot(cardioDataTask1) +
+  geom_density(aes(x=ap_hi), fill='skyblue') + 
+  labs(x="Systolic BP", title = "SBP Density After")
 
 # SBP histogram and BoxPlot before and after filter implausible values.
-(sbp_hist_before + sbp_boxplot_before) / (sbp_hist_after + sbp_boxplot_after)
+(sbp_boxplot_before + sbp_hist_before + sbp_dens_after) / 
+  (sbp_boxplot_after + sbp_hist_after + sbp_dens_after)
+
 ```
 
-#### 5. Diastolic blood pressure (DBP): ap_lo
-
-From Statistic summary of Diastolic blood pressure, there are outliers in dataset. There are negative values and very high values.
-
-subject which has below 20 DBP value are removed as lower outliers.
-
-subject which has above 500 DBP value are removed as higher outliers.
-
-```{r ap_lo_outlier}
-# Remove ap_lo outlier : below 21 and above 500
- cardioDataTask1 = cardioDataTask1 |>
-              filter(ap_lo > 20 & ap_lo <= 500)
-```
-
-```{r ap_lo_plot}
+```{r Task1_ap_lo_plot}
 #| echo: false
 
 # Variable DBP Box-Plot
@@ -409,6 +414,11 @@ dbp_hist_before = ggplot(tidyCardioData) +
   geom_histogram(aes(x=ap_lo), fill='skyblue', binwidth = 5) +
   labs(x="Diastolic BP", title = "DBP Histogram Before")
 
+# Variable DBP Density.
+dbp_dens_before = ggplot(tidyCardioData) +
+  geom_density(aes(x=ap_lo), fill='skyblue') + 
+  labs(x="Diastolic BP", title = "DBP Density Before")
+
 # Variable DBP Box-Plot
 dbp_boxplot_after = ggplot(cardioDataTask1) +
   geom_boxplot(aes(ap_lo))+
@@ -419,14 +429,14 @@ dbp_hist_after = ggplot(cardioDataTask1) +
   geom_histogram(aes(x=ap_lo), fill='skyblue', binwidth = 5) +
   labs(x="Diastolic BP", title = "DBP Histogram After")
 
-# DBP Box-Plot and Histogram
-#dbp_hist_before + dbp_boxplot_before
-
-# DBP Box-Plot and Histogram after filter implausible values.
-#dbp_hist_after + dbp_boxplot_after
+# Variable DBP Density after filter implausible values.
+dbp_dens_after = ggplot(cardioDataTask1) +
+  geom_density(aes(x=ap_lo), fill='skyblue') + 
+  labs(x="Diastolic BP", title = "DBP Density After")
 
 # DBP histogram and BoxPlot before and after filter implausible values.
-(dbp_hist_before + dbp_boxplot_before) / (dbp_hist_after + dbp_boxplot_after)
+(dbp_boxplot_before + dbp_hist_before + dbp_dens_after) / 
+  (dbp_boxplot_after + dbp_hist_after + dbp_dens_after)
 ```
 
 {{< pagebreak >}}
@@ -529,25 +539,34 @@ cardioPresent = cardioDataTask2 |>
                filter(cardio == "Present")
 
 # Compare Scatter plot between SBP and BMI per cardio class.
-aphi_BMI_cardioPresent = ggplot(cardioPresent,aes(x=BMI,y=ap_hi,color=cardio)) +
+sbp_BMI_cardioPresent = ggplot(cardioPresent,aes(x=BMI,y=ap_hi,color=cardio)) +
                            geom_point()  
                          
-aphi_BMI_cardioAbsent = ggplot(cardioAbsent, aes(x=BMI, y=ap_hi, color=cardio)) +                           geom_point() +
-                          scale_color_manual(values=c("blue"))
+sbp_BMI_cardioAbsent = ggplot(cardioAbsent, 
+                              aes(x=BMI, y=ap_hi,color=cardio)) +
+                      geom_point() +
+                      scale_color_manual(values=c("blue"))
 
-aphi_BMI_cardioAbsent / aphi_BMI_cardioPresent +  
+sbp_BMI_cardioAbsent / sbp_BMI_cardioPresent +  
   plot_annotation(title = "Scatter plot : SBP ~ BMI per cardio class")
 
-# Box Plot : cardio ~ SBP and cardio ~ BMI
-task3_aphi_boxplot = ggplot(cardioDataTask2) +
+# Box Plot and density: cardio ~ SBP and cardio ~ BMI
+task3_sbp_boxplot = ggplot(cardioDataTask2) +
                        geom_boxplot(aes(y=cardio, x=ap_hi, color=cardio)) +
                        theme_bw() 
 task3_BMI_boxplot = ggplot(cardioDataTask2) +
                        geom_boxplot(aes(y=cardio, x=BMI, color=cardio)) +
                        theme_bw()
+task3_sbp_density = ggplot(cardioDataTask2, 
+                         aes(ap_hi, fill=cardio, color=cardio)) +
+                  geom_density(alpha = 0.2)
+
+task3_BMI_density = ggplot(cardioDataTask2, 
+                         aes(BMI, fill=cardio, color=cardio)) +
+                  geom_density(alpha = 0.2)
                       
-task3_aphi_boxplot / task3_BMI_boxplot + 
-  plot_annotation(title = "Box plot : SBP and BMI distribution in categories of cardio")
+(task3_sbp_boxplot + task3_sbp_density / task3_BMI_boxplot + task3_BMI_density ) + 
+  plot_annotation(title = "Box & Denstity: SBP & BMI distribution in class of cardio")
 ```
 
 {{< pagebreak >}}
@@ -724,17 +743,31 @@ task5_aphi_boxplot / task5_aplo_boxplot / task5_BMI_boxplot +
 
 # Task 06
 
-#### **Task Description:**
-
-How is age distributed in the different categories of cardio? Display age in years.
+##### Analysis of Age distribution in the different categories of cardio**:**
 
 ```{r task6}
 #| echo: false
 
+# Age statistic summary Table group by cardio categories. 
+age_cardio_Stat = tidyCardioData |>
+               group_by(cardio) |>
+               summarise(Min = min(age), 
+                        Q1st = quantile(age, p=0.25),
+                        Median = median(age),
+                        Mean = mean(age),
+                        Q3rd = quantile(age, p=0.75),
+                        Max = max(age)
+                        )
+
+# Print Age summary Table
+kbl(age_cardio_Stat, booktabs = T, digits=2, align='c',
+       caption="Age Statistics Summary") |>
+  kable_styling(latex_options = c("striped","HOLD_position"))
+
 # Histogram stack bar with categories of cardio
 task6_hist_fill = ggplot(cardioDataTask2) +
-  geom_histogram(aes(age, fill=cardio),color="black", binwidth=4, position="fill") +
-  xlim(25,70) +
+  geom_histogram(aes(age, fill=cardio),
+                 color="black", binwidth=4, position="fill") +
   labs(x="age (years)")
 
 # Boxplot of age
@@ -743,11 +776,25 @@ task6_boxplot = ggplot(cardioDataTask2) +
   theme_bw() + 
   labs(x="age (years)")
 
-task6_hist_fill / task6_boxplot
+# Density plot of age
+task6_density = ggplot(cardioDataTask2, 
+                         aes(age, fill=cardio, color=cardio)) +
+                    geom_density(alpha = 0.3) +
+                    labs(x="age (years)")
+
+task6_hist_fill / task6_boxplot / task6_density +
+  plot_layout(guides = 'collect') +
+  plot_annotation(title = "Age Distribution in outcome variable cardio")
 
 ```
 
-#### 
+##### Conclusion:
+
+Median age for cardiac disease present is higher than for cardiac disease absent by 4 years.
+
+50% of subjects with cardiac disease present are in age between 50 and 60. 50% of subjects with cardiac disease absent are in age between 46 and 56. Age distribution for cardiac disease present is left-skewed. Age is spread in same range for cardiac disease absent and present.
+
+Histogram shows, present of cardiac disease is increase with age from 25% to 75%.
 
 {{< pagebreak >}}
 
@@ -786,24 +833,14 @@ ggplot(cardioDataTask2) +
 
 # Task 09
 
-#### 1. Overview/ Contingency table :
+#### 1. Contingency table :
 
-Risk parameteres i.e. smoking, alcohol, and insufficient physical activity distribution between two types of cardio.
+Risk parameters i.e. smoking, alcohol, and insufficient physical activity distribution between two types of cardio.
 
 ```{r task9-table}
 #| echo: false
 
-# Overview table : risk factor distribution between types of cardio.
-overviewTable = table(cardioDataTask2$active, cardioDataTask2$smoke,
-                      cardioDataTask2$alco, cardioDataTask2$cardio)
-
-kbl(overviewTable,  booktabs = T,
-      col.names=c("Active","Smoke","Alcohol","Cardio", "Count"),
-      caption="Overview Table: Distributions of three risk factors") |>
-  kable_styling(latex_options = c("striped", "HOLD_position"))
-
-### Freq. table using ftable()
-
+# Freq. table using ftable()
 # Select only Catagory variables 3 risk factors and cardio
 task9Data = cardioDataTask2 |>
             select(active, smoke, alco, cardio)
@@ -812,14 +849,12 @@ task9Data = cardioDataTask2 |>
 overviewTableF = as.data.frame(ftable(task9Data)) |>
                  pivot_wider(names_from = cardio, values_from = Freq) |>
                  rename(Active=active, Smoke=smoke, Alcohol=alco)
-                 
+
+# Print Contingency Table                
 kbl(overviewTableF,  booktabs = T,
-    caption="Overview Table: Distributions of three risk factors") |>
+    caption="Contingency Table: Distributions of three risk factors") |>
     kable_styling(latex_options = c("striped", "HOLD_position")) |>
     add_header_above(c(" "," "," ","Cardio" = 2))
-
-#print Ftable -To test
-#ftable(task9Data)
 ```
 
 #### 2. Chi-squared test:
